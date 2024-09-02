@@ -51,6 +51,8 @@ https://www.youtube.com/watch?v=k5i-vE5rZR0 - Detailed MPU6050 Tutorial
 https://cyberleninka.ru/article/n/akselerometr-i-giroskop-mpu6050-pervoe-vklyuchenie-na-stm32-i-issledovanie-pokazaniy-v-statike   
 
 Kalman   
+https://github.com/TKJElectronics/KalmanFilter      
+https://github.com/leech001/MPU6050      
 https://ru.wikipedia.org/wiki/Фильтр_Калмана    
 https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python    
 https://habr.com/ru/articles/166693/    
