@@ -23,6 +23,7 @@
 ## Demonstration
 
 ![axes1](https://github.com/user-attachments/assets/4d396076-186d-422e-847d-b4049b04b42e)
+![lcd](https://github.com/user-attachments/assets/48cca381-ad42-488b-bc37-c2bdfca32dcf)
 
 
 
