@@ -26,6 +26,14 @@
 ![lcd](https://github.com/user-attachments/assets/48cca381-ad42-488b-bc37-c2bdfca32dcf)
 
 
+https://github.com/user-attachments/assets/3ba4955f-2bc9-4c9a-ac5c-f9eb6384982f
+
+
+https://github.com/user-attachments/assets/2d497dd3-ec20-473c-aec2-921d520560ed
+
+
+
+
 
 ## References
 MAG3110     
