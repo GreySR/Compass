@@ -76,6 +76,10 @@ int16_t Gyro_Y_RAW = 0;
 int16_t Gyro_Z_RAW = 0;
 
 float32_t Ax, Ay, Az, Gx, Gy, Gz;
+float32_t fPhi, fThe, fPsi;
+float32_t OldfPhi = 1., OldfThe = 1.;
+float32_t fSinPhi, fSinThe, fSinPsi;
+float32_t fCosPhi, fCosThe, fCosPsi;
 float64_t roll, pitch, K_roll, K_pitch;
 float64_t theta_x, theta_y;
 
@@ -90,11 +94,25 @@ Kalman_t KalmanY = {
     .Q_bias = 0.003f,
     .R_measure = 0.03f};
 
-
+/*
 float32_t A[3][3] = {{ 1.098399, 0.031869, -0.082378},
 										 { 0.031869, 1.135835,  0.007728},
 										 {-0.082378, 0.007728,  1.155759}};
 float32_t b[3] = {1067.947654, -574.889729, -1243.537693};
+*/
+
+float32_t A[3][3] = {{ 1.098399, -0.031869, -0.082378},
+										 { -0.031869, 1.135835,  -0.007728},
+										 {-0.082378, -0.007728,  1.155759}};
+float32_t b[3] = {1067.947654, 574.889729, -1243.537693};
+
+/*
+float32_t A[3][3] = {{ 0.113592,  -0.003187, -0.000773},
+										 { -0.003187,  0.109848,  -0.008238},
+										 {-0.000773, -0.008238,  0.115585}};
+float32_t b[3] = {574.889729, 1067.947654, -1243.537693};
+*/
+
 float32_t Mag_cal[3] = {0., 0., 0.};
 /* USER CODE END PV */
 
@@ -196,7 +214,7 @@ int main(void)
 		MAG3110_readHeading();
 
 
-  	//sprintf(tx_buffer, "$%d %d %d;", X_RAW, Y_RAW, Z_RAW); // SerialPlotPlotter
+  	//sprintf(tx_buffer, "$%d %d %d %f %f %f;", X_RAW, Y_RAW, Z_RAW, Ax, Ay, Az); // SerialPlotPlotter
 
 		sprintf(tx_buffer, "%06.2f", heading);
   	HAL_UART_Transmit(&huart1, tx_buffer, strlen(tx_buffer), 1000);
@@ -412,7 +430,7 @@ void MAG3110_readMag(void) {
 	X_RAW = (int16_t)(Out_XYZ[0] << 8 | Out_XYZ[1]);
 	Y_RAW = (int16_t)(Out_XYZ[2] << 8 | Out_XYZ[3]);
 	Z_RAW = (int16_t)(Out_XYZ[4] << 8 | Out_XYZ[5]);
-	int16_t XYZ_RAW[3] = {X_RAW, Y_RAW, Z_RAW};
+	int16_t XYZ_RAW[3] = {X_RAW, -Y_RAW, Z_RAW};
 
 	for(int i = 0; i < 3; ++i) {
 		Mag_cal[i] = 0.;
@@ -426,6 +444,31 @@ void MAG3110_readHeading(void) {
 	MAG3110_readMag();
 	float32_t xf = Mag_cal[0];
 	float32_t yf = Mag_cal[1];
+	float32_t zf = Mag_cal[2];
+
+	//-------------------------------------------------------------------------------
+
+	// fPhi == Roll
+	// fThe == Pitch
+	// fPsi == Yaw/Heading
+
+	fPhi = atan2(Ay , Az);
+	fPhi = 0.7 * OldfPhi + 0.3 * fPhi;
+	OldfPhi = fPhi;
+	fSinPhi = sin(fPhi);
+	fCosPhi = cos(fPhi);
+
+
+	fThe = atan(-Ax / (Ay * fSinPhi + Az * fCosPhi));
+	fThe = 0.7 * OldfThe + 0.3 * fThe;
+	OldfThe = fThe;
+	fSinThe = sin(fThe);
+	fCosThe = cos(fThe);
+
+	fPsi = atan2((zf * fSinPhi - yf * fCosPhi), (xf * fCosThe + yf * fSinThe * fSinPhi + zf * fSinThe * fCosPhi));
+
+
+	//-------------------------------------------------------------------------------
 
 	// Заготовка
 	theta_x = K_roll;
@@ -434,7 +477,8 @@ void MAG3110_readHeading(void) {
   //yf = yf * cos(theta_x) - Mag_cal[2] * sin(theta_x);
 
 	// Calculate the heading
-	heading  = (atan2(yf, xf) * RAD_TO_DEG);
+	//heading  = (atan2(yf, xf) * RAD_TO_DEG);
+	heading = fPsi * RAD_TO_DEG;
 	heading = (heading >= 0) ? heading : heading + 360;
 }
 
@@ -553,9 +597,11 @@ void MPU6050_Read_Accel(void) {
 	Accel_Y_RAW = (int16_t)(Rec_Data[2] << 8 | Rec_Data [3]);
 	Accel_Z_RAW = (int16_t)(Rec_Data[4] << 8 | Rec_Data [5]);
 
-	Ax =  Accel_X_RAW/4096.0;
-	Ay =  Accel_Y_RAW/4096.0;
-	Az = -Accel_Z_RAW/4096.0;
+	uint16_t mult = 1;
+
+	Ax =  mult * Accel_X_RAW / 4096.0;
+	Ay =  -mult * Accel_Y_RAW / 4096.0;
+	Az =  mult * Accel_Z_RAW / 4096.0;
 }
 
 void MPU6050_Read_Gyro(void) {
